@@ -1,0 +1,201 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Firma {
+  id_firmy     Int         @id @default(autoincrement())
+  imie         String
+  nazwisko     String
+  nazwa        String
+  NIP          String
+  REGON        String?
+  telefon      String
+  email        String
+  kraj         String
+  wojewodztwo  String
+  kod_pocztowy String
+  miasto       String
+  ulica        String
+  numer_domu   String
+  numer_lokalu String
+  pracownik    Pracownik[]
+}
+
+model Pracownik {
+  firma             Firma               @relation(fields: [id_firmy], references: [id_firmy])
+  uzytkownik        Uzytkownik          @relation(fields: [id_uzytkownika], references: [id_uzytkownika])
+  id_pracownika     Int                 @id @default(autoincrement())
+  id_firmy          Int
+  id_uzytkownika    Int
+  imie              String
+  nazwisko          String
+  PESEL             String
+  telefon           String
+  email             String
+  kraj              String
+  wojewodztwo       String
+  kod_pocztowy      String
+  miasto            String
+  ulica             String
+  numer_domu        String
+  numer_lokalu      String
+  Paleta            Paleta[]
+  status_zamowienia Status_Zamowienia[]
+}
+
+model Dostawca {
+  id_dostawcy  Int      @id @default(autoincrement())
+  imie         String
+  nazwisko     String
+  nazwa        String?
+  NIP          String?
+  REGON        String?
+  telefon      String?
+  email        String?
+  kraj         String
+  wojewodztwo  String
+  kod_pocztowy String
+  miasto       String
+  ulica        String
+  numer_domu   String
+  numer_lokalu String
+  paleta       Paleta[]
+}
+
+model Paleta {
+  id_palety     Int       @id @default(autoincrement())
+  dostawca      Dostawca  @relation(fields: [id_dostawcy], references: [id_dostawcy])
+  pracownik     Pracownik @relation(fields: [id_pracownika], references: [id_pracownika])
+  id_dostawcy   Int
+  id_pracownika Int
+  cena_zakupu   Float
+  data_zakupu   DateTime
+  data_dostawy  DateTime
+  partia        Partia[]
+}
+
+model Kategoria {
+  id_kategorii       Int                  @id @default(autoincrement())
+  kategoria_produktu Kategoria_Produktu[]
+  nazwa              String
+  opis               String
+}
+
+model Produkt {
+  id_produktu        Int                  @id @default(autoincrement())
+  nazwa              String
+  EAN                String?
+  ASIN               String?
+  opis               String?
+  kategoria_produktu Kategoria_Produktu[]
+  partia             Partia[]
+}
+
+model Kategoria_Produktu {
+  id_kategorii_produktu Int       @id @default(autoincrement())
+  kategoria             Kategoria @relation(fields: [id_kategorii], references: [id_kategorii])
+  produkt               Produkt   @relation(fields: [id_produktu], references: [id_produktu])
+  id_kategorii          Int
+  id_produktu           Int
+}
+
+model Partia {
+  produkt           Produkt             @relation(fields: [id_produktu], references: [id_produktu])
+  stan              Stan                @relation(fields: [id_stanu], references: [id_stanu])
+  paleta            Paleta              @relation(fields: [id_palety], references: [id_palety])
+  id_partii         Int                 @id @default(autoincrement())
+  id_produktu       Int
+  id_stanu          Int
+  id_palety         Int
+  ilosc_w_dostawie  Int
+  ilosc_w_magazynie Int
+  cena_zakupu       Float?
+  cena_sprzedazy    Float
+  opis              String?
+  partia_zamowienie Partia_Zamowienie[]
+}
+
+model Stan {
+  id_stanu Int      @id @default(autoincrement())
+  nazwa    String
+  opis     String
+  partia   Partia[]
+}
+
+model Klient {
+  id_klienta     Int          @id @default(autoincrement())
+  uzytkownik     Uzytkownik?  @relation(fields: [id_uzytkownika], references: [id_uzytkownika])
+  id_uzytkownika Int?
+  imie           String
+  nazwisko       String
+  nazwa_firmy    String?
+  NIP            String?
+  REGON          String?
+  telefon        String
+  email          String
+  kraj           String
+  wojewodztwo    String
+  kod_pocztowy   String
+  miasto         String
+  ulica          String
+  numer_domu     String
+  numer_lokalu   String
+  zamowienia     Zamowienie[]
+}
+
+model Uzytkownik {
+  id_uzytkownika Int         @id @default(autoincrement())
+  email          String
+  haslo          String
+  nazwa          String
+  rola           String
+  pracownik      Pracownik[]
+  klient         Klient[]
+}
+
+model Zamowienie {
+  klient            Klient              @relation(fields: [id_klienta], references: [id_klienta])
+  id_zamowienia     Int                 @id @default(autoincrement())
+  id_klienta        Int
+  data_zamowienia   DateTime
+  cena_zamowienia   Float
+  uwagi             String?
+  partia_zamowienie Partia_Zamowienie[]
+  status_zamowienia Status_Zamowienia[]
+}
+
+model Partia_Zamowienie {
+  Partia             Partia     @relation(fields: [id_partii], references: [id_partii])
+  zamowienie         Zamowienie @relation(fields: [id_zamowienia], references: [id_zamowienia])
+  id_palety          Int        @id @default(autoincrement())
+  id_partii          Int
+  id_zamowienia      Int
+  ilosc_w_zamowieniu Int
+}
+
+model Status {
+  id_statusu        Int                 @id @default(autoincrement())
+  nazwa             String
+  opis              String
+  Status_Zamowienia Status_Zamowienia[]
+}
+
+model Status_Zamowienia {
+  status                Status     @relation(fields: [id_statusu], references: [id_statusu])
+  zamowienie            Zamowienie @relation(fields: [id_zamowienia], references: [id_zamowienia])
+  pracownik             Pracownik  @relation(fields: [id_pracownika], references: [id_pracownika])
+  id_statusu_zamowienia Int        @id @default(autoincrement())
+  id_statusu            Int
+  id_zamowienia         Int
+  id_pracownika         Int
+  znacznik_czasu        DateTime
+  uwagi                 String?
+}
