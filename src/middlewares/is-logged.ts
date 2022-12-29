@@ -16,10 +16,9 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
       token,
       process.env.SESSION_SECRET!
     ) as JwtTokenPayload;
-    req.user = {
-      id: payload.user_id,
-      usernmame: payload.login,
-    };
+
+    req.user = payload.data.user_id;
+
     next();
   } catch (err) {
     throw new UnautenticatedError("Authentication invalid!");

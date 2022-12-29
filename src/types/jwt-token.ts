@@ -1,4 +1,10 @@
 export interface JwtTokenPayload {
-  user_id: string;
-  login: string;
+  exp: number;
+  data: {
+    user_id: number;
+    login: string;
+  };
 }
+
+// user_id: string;
+// login: string;

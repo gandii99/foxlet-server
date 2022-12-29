@@ -1,16 +1,16 @@
 import { prisma } from "../lib/prisma-client";
 import { Request, Response } from "express";
-import { string, z } from "zod";
+import { z } from "zod";
 import { generateErrorMessage } from "zod-error";
 import { ValidationError } from "../errors";
 
 const createSchema = z.object({
-  idFirmy: z.number(),
-  idUzytkownika: z.number(),
-  imie: z.string().min(1, { message: "name is required" }),
-  nazwisko: z.string().min(1, { message: "lastName is required" }),
+  id_company: z.number(),
+  id_user: z.number(),
+  first_name: z.string().min(1, { message: "name is required" }),
+  last_name: z.string().min(1, { message: "lastName is required" }),
   PESEL: z.string().length(11, { message: "PESEL is invalid" }),
-  telefon: z
+  phone: z
     .string()
     .min(9, { message: "Phone number is too short" })
     .max(12, { message: "Phone number is too long" }),
@@ -18,16 +18,14 @@ const createSchema = z.object({
     .string()
     .min(1, { message: "email is required" })
     .email({ message: "provide valid email address" }),
-  kraj: z.string(),
-  wojewodztwo: z.string(),
-  kodPocztowy: z.string(),
-  miasto: z.string(),
-  ulica: z.string(),
-  numerDomu: z.string(),
-  numerLokalu: z.string(),
+  country: z.string(),
+  province: z.string(),
+  postal_code: z.string(),
+  city: z.string(),
+  street: z.string(),
 });
 
-const create = async (req: Request, res: Response) => {
+const createEmployee = async (req: Request, res: Response) => {
   const validation = createSchema.safeParse(req.body);
 
   if (!validation.success) {
@@ -37,27 +35,63 @@ const create = async (req: Request, res: Response) => {
 
   const body = validation.data;
 
-  const user = await prisma.pracownik.create({
+  const employee = await prisma.employee.create({
     data: {
-      id_firmy: body.idFirmy,
-      id_uzytkownika: body.idUzytkownika,
-      imie: body.imie,
-      nazwisko: body.nazwisko,
+      id_company: body.id_company,
+      id_user: body.id_user,
+      first_name: body.first_name,
+      last_name: body.last_name,
       PESEL: body.PESEL,
+      phone: body.phone,
       email: body.email,
-      telefon: body.telefon,
-      kraj: body.kraj,
-      wojewodztwo: body.wojewodztwo,
-      kod_pocztowy: body.kodPocztowy,
-      miasto: body.miasto,
-      ulica: body.ulica,
-      numer_domu: body.numerDomu,
-      numer_lokalu: body.numerLokalu,
+      country: body.country,
+      province: body.province,
+      postal_code: body.postal_code,
+      city: body.city,
+      street: body.street,
     },
   });
-  res.status(201).json(user);
+  res.status(201).json(employee);
+};
+const getAllEmployees = async (req: Request, res: Response) => {
+  console.log(req.user);
+  const employees = await prisma.employee.findMany();
+  res.status(201).json(employees);
+};
+
+const getSelectedEmployees = async (req: Request, res: Response) => {
+  console.log(req.params.id);
+  const employeesId = req.params.id
+    .split(",")
+    .map((e) => parseInt(e))
+    .filter((e) => !isNaN(e));
+  const employees = await prisma.employee.findMany({
+    where: {
+      id_user: { in: employeesId },
+    },
+  });
+  res.status(201).json(employees);
+};
+
+const getMyEmployeeProfile = async (req: Request, res: Response) => {
+  console.log("getMyEmployeeProfile");
+  console.log(req.params.id);
+  const currentLoggedUser = req.user;
+  if (!currentLoggedUser) {
+    throw Error("No user id in request object");
+  }
+  console.log("currentLoggedUser", currentLoggedUser);
+  const employee = await prisma.employee.findFirst({
+    where: {
+      id_user: currentLoggedUser,
+    },
+  });
+  res.status(200).json(employee);
 };
 
 export default {
-  create,
+  createEmployee,
+  getAllEmployees,
+  getSelectedEmployees,
+  getMyEmployeeProfile,
 };

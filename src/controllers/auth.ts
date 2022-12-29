@@ -5,7 +5,7 @@ import { ValidationError } from "../errors/validation-error";
 import { prisma } from "../lib/prisma-client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { NotFoundError } from "@prisma/client/runtime";
+import { NotFoundError } from "../errors/not-found-error";
 import { UnautenticatedError } from "../errors/unautenticated-error";
 
 const registerSchema = z.object({
@@ -18,7 +18,7 @@ const registerSchema = z.object({
   role: z.string(),
 });
 
-const register = async (req: Request, res: Response) => {
+const registerUser = async (req: Request, res: Response) => {
   const validation = registerSchema.safeParse(req.body);
 
   if (!validation.success) {
@@ -30,12 +30,12 @@ const register = async (req: Request, res: Response) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await prisma.uzytkownik.create({
+    const user = await prisma.user.create({
       data: {
         email: email,
-        haslo: hashedPassword,
-        nazwa: name,
-        rola: role,
+        password: hashedPassword,
+        name: name,
+        role: role,
       },
     });
     res.status(201).json(user);
@@ -52,7 +52,7 @@ const loginSchema = z.object({
   password: z.string().min(1, { message: "password is required" }),
 });
 
-const login = async (req: Request, res: Response) => {
+const loginUser = async (req: Request, res: Response) => {
   const validation = loginSchema.safeParse(req.body);
 
   if (!validation.success) {
@@ -61,7 +61,7 @@ const login = async (req: Request, res: Response) => {
   }
 
   const { email, password } = validation.data;
-  const user = await prisma.uzytkownik.findFirst({
+  const user = await prisma.user.findFirst({
     where: {
       email: email,
     },
@@ -73,7 +73,7 @@ const login = async (req: Request, res: Response) => {
     throw new NotFoundError("No user with that email");
   }
 
-  const isPasswordCorrect = await bcrypt.compare(password, user.haslo);
+  const isPasswordCorrect = await bcrypt.compare(password, user.password);
   console.log("proccessss", process.env.SESSION_SECRET);
 
   if (isPasswordCorrect) {
@@ -81,17 +81,17 @@ const login = async (req: Request, res: Response) => {
       {
         exp: Math.floor(Date.now() / 1000) + 60 * 60,
         data: {
-          user_id: user.id_uzytkownika,
-          login: user.nazwa,
+          user_id: user.id_user,
+          login: user.name,
         },
       },
       process.env.SESSION_SECRET!
     );
     res.status(200).json({
       user: {
-        id: user.id_uzytkownika,
-        name: user.nazwa,
-        role: user.rola,
+        id: user.id_user,
+        name: user.name,
+        role: user.role,
       },
       token,
     });
@@ -101,6 +101,6 @@ const login = async (req: Request, res: Response) => {
 };
 
 export default {
-  register,
-  login,
+  registerUser,
+  loginUser,
 };

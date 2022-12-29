@@ -3,8 +3,9 @@ import employeesRouter from "../controllers/employees";
 
 const router = Router();
 
-router.post("/", employeesRouter.create);
-// router.post("/login", authRouter.login);
-// router.get("/logout", authRouter.logout);
+router.post("/", employeesRouter.createEmployee);
+router.get("/", employeesRouter.getAllEmployees);
+router.get("/my-employee-profile", employeesRouter.getMyEmployeeProfile);
+router.get("/:id", employeesRouter.getSelectedEmployees);
 
 export default router;

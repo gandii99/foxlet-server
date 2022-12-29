@@ -1,3 +1,4 @@
+import { NotFoundError } from "@prisma/client/runtime";
 import { ErrorRequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import { CustomError } from "../errors";
@@ -6,6 +7,7 @@ const errorHandlerMiddleware: ErrorRequestHandler = (err, req, res, next) => {
   console.log(err);
 
   if (err instanceof CustomError) {
+    console.log("customError");
     return res.status(err.statusCode).json({ message: err.message });
   }
 
