@@ -25,6 +25,29 @@ const createSchema = z.object({
   street: z.string(),
 });
 
+const patchSchema = z.object({
+  id_company: z.number().optional(),
+  id_user: z.number().optional(),
+  first_name: z.string().min(1, { message: "name is required" }).optional(),
+  last_name: z.string().min(1, { message: "lastName is required" }).optional(),
+  PESEL: z.string().length(11, { message: "PESEL is invalid" }).optional(),
+  phone: z
+    .string()
+    .min(9, { message: "Phone number is too short" })
+    .max(12, { message: "Phone number is too long" })
+    .optional(),
+  email: z
+    .string()
+    .min(1, { message: "email is required" })
+    .email({ message: "provide valid email address" })
+    .optional(),
+  country: z.string().optional(),
+  province: z.string().optional(),
+  postal_code: z.string().optional(),
+  city: z.string().optional(),
+  street: z.string().optional(),
+});
+
 const createEmployee = async (req: Request, res: Response) => {
   const validation = createSchema.safeParse(req.body);
 
@@ -89,9 +112,30 @@ const getMyEmployeeProfile = async (req: Request, res: Response) => {
   res.status(200).json(employee);
 };
 
+const updateMyEmployeeProfileData = async (req: Request, res: Response) => {
+  const validation = patchSchema.safeParse(req.body);
+
+  if (!validation.success) {
+    const errorMessage = generateErrorMessage(validation.error.issues);
+    throw new ValidationError(errorMessage);
+  }
+  const currentLoggedUser = req.user;
+
+  const body = validation.data;
+
+  const employee = await prisma.employee.updateMany({
+    where: {
+      id_user: currentLoggedUser,
+    },
+    data: body,
+  });
+  res.status(201).json(employee);
+};
+
 export default {
   createEmployee,
   getAllEmployees,
   getSelectedEmployees,
   getMyEmployeeProfile,
+  updateMyEmployeeProfileData,
 };

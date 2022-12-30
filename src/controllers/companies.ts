@@ -18,6 +18,20 @@ const createSchema = z.object({
   city: z.string(),
   street: z.string(),
 });
+const patchSchema = z.object({
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  company_name: z.string().optional(),
+  NIP: z.string().optional(),
+  REGON: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  country: z.string().optional(),
+  province: z.string().optional(),
+  postal_code: z.string().optional(),
+  city: z.string().optional(),
+  street: z.string().optional(),
+});
 
 const createCompany = async (req: Request, res: Response) => {
   const validation = createSchema.safeParse(req.body);
@@ -88,9 +102,32 @@ const getMyCompanProfile = async (req: Request, res: Response) => {
   res.status(200).json(company);
 };
 
+const updateMyCompanyProfileData = async (req: Request, res: Response) => {
+  const validation = patchSchema.safeParse(req.body);
+
+  if (!validation.success) {
+    const errorMessage = generateErrorMessage(validation.error.issues);
+    throw new ValidationError(errorMessage);
+  }
+  const currentLoggedUser = req.user;
+
+  const body = validation.data;
+
+  const employee = await prisma.company.updateMany({
+    where: {
+      employee: {
+        some: { id_user: currentLoggedUser },
+      },
+    },
+    data: body,
+  });
+  res.status(201).json(employee);
+};
+
 export default {
   createCompany,
   getAllCompanies,
   getSelectedCompanies,
   getMyCompanProfile,
+  updateMyCompanyProfileData,
 };

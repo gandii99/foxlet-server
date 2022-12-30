@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import { generateErrorMessage } from "zod-error";
 import { ValidationError } from "../errors";
+import bcrypt from "bcrypt";
 
 const createSchema = z.object({
   name: z.string().min(1, { message: "name is required" }),
@@ -12,6 +13,17 @@ const createSchema = z.object({
     .email({ message: "provide valid email address" }),
   password: z.string().min(1, { message: "password is required" }),
   role: z.string(),
+});
+
+const patchSchema = z.object({
+  name: z.string().min(1, { message: "name is required" }).optional(),
+  email: z
+    .string()
+    .min(1, { message: "email is required" })
+    .email({ message: "provide valid email address" })
+    .optional(),
+  password: z.string().min(1, { message: "password is required" }).optional(),
+  role: z.string().optional(),
 });
 
 const getAllUsers = async (req: Request, res: Response) => {
@@ -47,7 +59,33 @@ const getSelectedUsers = async (req: Request, res: Response) => {
   res.status(201).json(users);
 };
 
+const updateMyUserProfileData = async (req: Request, res: Response) => {
+  const validation = patchSchema.safeParse(req.body);
+
+  if (!validation.success) {
+    const errorMessage = generateErrorMessage(validation.error.issues);
+    throw new ValidationError(errorMessage);
+  }
+  const currentLoggedUser = req.user;
+
+  const body = validation.data;
+
+  if (body?.password) {
+    const hashedPassword = await bcrypt.hash(body.password, 10);
+    body.password = hashedPassword;
+  }
+
+  const user = await prisma.user.update({
+    where: {
+      id_user: currentLoggedUser,
+    },
+    data: body,
+  });
+  res.status(201).json(user);
+};
+
 export default {
   getAllUsers,
   getSelectedUsers,
+  updateMyUserProfileData,
 };
