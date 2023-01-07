@@ -7,7 +7,7 @@ import { ValidationError } from "../errors";
 const createSchema = z.object({
   first_name: z.string(),
   last_name: z.string(),
-  name: z.string(),
+  supplier_name: z.string(),
   NIP: z.string(),
   REGON: z.string(),
   phone: z.string(),
@@ -33,7 +33,7 @@ const createSupplier = async (req: Request, res: Response) => {
     data: {
       first_name: body.first_name,
       last_name: body.last_name,
-      name: body.name,
+      supplier_name: body.supplier_name,
       NIP: body.NIP,
       REGON: body.REGON,
       phone: body.phone,
@@ -46,6 +46,31 @@ const createSupplier = async (req: Request, res: Response) => {
     },
   });
   res.status(201).json(supplier);
+};
+
+interface UserType {
+  user_name: string;
+  email: string;
+  password: string;
+  role: string;
+}
+
+const getMySuppliers = async (req: Request, res: Response) => {
+  console.log(req.user);
+  const currentLoggedUser = req.user;
+
+  const suppliers = await prisma.supplier.findMany({
+    where: {
+      pallet: {
+        some: {
+          employee: {
+            id_user: currentLoggedUser,
+          },
+        },
+      },
+    },
+  });
+  res.status(201).json(suppliers);
 };
 
 const getAllSuppliers = async (req: Request, res: Response) => {
@@ -70,6 +95,7 @@ const getSelectedSuppliers = async (req: Request, res: Response) => {
 
 export default {
   createSupplier,
+  getMySuppliers,
   getAllSuppliers,
   getSelectedSuppliers,
 };

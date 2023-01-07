@@ -42,8 +42,9 @@ const createCompany = async (req: Request, res: Response) => {
   }
 
   const body = validation.data;
+  const currentLoggedUser = req.user;
 
-  const pallet = await prisma.company.create({
+  const company = await prisma.company.create({
     data: {
       first_name: body.first_name,
       last_name: body.last_name,
@@ -59,7 +60,18 @@ const createCompany = async (req: Request, res: Response) => {
       street: body.street,
     },
   });
-  res.status(201).json(pallet);
+  console.log("created palett");
+  const employee = await prisma.employee.updateMany({
+    where: {
+      id_user: currentLoggedUser,
+    },
+    data: {
+      id_company: company.id_company,
+    },
+  });
+  console.log(company);
+  console.log(employee);
+  res.status(201).json(company);
 };
 
 const getAllCompanies = async (req: Request, res: Response) => {
@@ -110,7 +122,9 @@ const updateMyCompanyProfileData = async (req: Request, res: Response) => {
     throw new ValidationError(errorMessage);
   }
   const currentLoggedUser = req.user;
-
+  if (!currentLoggedUser) {
+    throw Error("No user id in request object");
+  }
   const body = validation.data;
 
   const employee = await prisma.company.updateMany({

@@ -6,7 +6,7 @@ import { ValidationError } from "../errors";
 import bcrypt from "bcrypt";
 
 const createSchema = z.object({
-  name: z.string().min(1, { message: "name is required" }),
+  user_name: z.string().min(1, { message: "name is required" }),
   email: z
     .string()
     .min(1, { message: "email is required" })
@@ -16,7 +16,7 @@ const createSchema = z.object({
 });
 
 const patchSchema = z.object({
-  name: z.string().min(1, { message: "name is required" }).optional(),
+  user_name: z.string().min(1, { message: "name is required" }).optional(),
   email: z
     .string()
     .min(1, { message: "email is required" })
@@ -32,7 +32,7 @@ const getAllUsers = async (req: Request, res: Response) => {
     select: {
       id_user: true,
       email: true,
-      name: true,
+      user_name: true,
       role: true,
     },
   });
@@ -48,15 +48,31 @@ const getSelectedUsers = async (req: Request, res: Response) => {
   const users = await prisma.user.findMany({
     where: {
       id_user: { in: usersId },
+      // id_user: { in: usersId },
     },
     select: {
       id_user: true,
       email: true,
-      name: true,
+      user_name: true,
       role: true,
     },
   });
   res.status(201).json(users);
+};
+
+const getMyUserProfile = async (req: Request, res: Response) => {
+  console.log("getMyUserProfile", req.user);
+  const currentLoggedUser = req.user;
+  if (!currentLoggedUser) {
+    throw Error("No user id in request object");
+  }
+  const company = await prisma.user.findFirst({
+    where: {
+      id_user: currentLoggedUser,
+    },
+  });
+
+  res.status(200).json(company);
 };
 
 const updateMyUserProfileData = async (req: Request, res: Response) => {
@@ -87,5 +103,6 @@ const updateMyUserProfileData = async (req: Request, res: Response) => {
 export default {
   getAllUsers,
   getSelectedUsers,
+  getMyUserProfile,
   updateMyUserProfileData,
 };

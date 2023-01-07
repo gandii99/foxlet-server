@@ -9,7 +9,7 @@ import { NotFoundError } from "../errors/not-found-error";
 import { UnautenticatedError } from "../errors/unautenticated-error";
 
 const registerSchema = z.object({
-  name: z.string().min(1, { message: "name is required" }),
+  user_name: z.string().min(1, { message: "name is required" }),
   email: z
     .string()
     .min(1, { message: "email is required" })
@@ -26,7 +26,7 @@ const registerUser = async (req: Request, res: Response) => {
     throw new ValidationError(errorMessage);
   }
 
-  const { email, password, name, role } = validation.data;
+  const { email, password, user_name, role } = validation.data;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -34,7 +34,7 @@ const registerUser = async (req: Request, res: Response) => {
       data: {
         email: email,
         password: hashedPassword,
-        name: name,
+        user_name: user_name,
         role: role,
       },
     });
@@ -82,7 +82,7 @@ const loginUser = async (req: Request, res: Response) => {
         exp: Math.floor(Date.now() / 1000) + 60 * 60,
         data: {
           user_id: user.id_user,
-          login: user.name,
+          login: user.user_name,
         },
       },
       process.env.SESSION_SECRET!
@@ -90,7 +90,7 @@ const loginUser = async (req: Request, res: Response) => {
     res.status(200).json({
       user: {
         id: user.id_user,
-        name: user.name,
+        name: user.user_name,
         role: user.role,
       },
       token,

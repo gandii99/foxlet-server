@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -28,11 +25,9 @@ model Company {
 }
 
 model Employee {
-  company      Company        @relation(fields: [id_company], references: [id_company])
-  user         User           @relation(fields: [id_user], references: [id_user])
   id_employee  Int            @id @default(autoincrement())
-  id_company   Int
-  id_user      Int
+  id_company   Int?
+  id_user      Int            @unique
   first_name   String
   last_name    String
   PESEL        String
@@ -43,90 +38,93 @@ model Employee {
   postal_code  String
   city         String
   street       String
-  Pallet       Pallet[]
+  company      Company?       @relation(fields: [id_company], references: [id_company])
+  user         User           @relation(fields: [id_user], references: [id_user])
   order_status Order_Status[]
+  Pallet       Pallet[]
 }
 
 model Supplier {
-  id_supplier Int      @id @default(autoincrement())
-  first_name  String
-  last_name   String
-  name        String?
-  NIP         String?
-  REGON       String?
-  phone       String?
-  email       String?
-  country     String
-  province    String
-  postal_code String
-  city        String
-  street      String
-  pallet      Pallet[]
+  id_supplier   Int      @id @default(autoincrement())
+  first_name    String
+  last_name     String
+  supplier_name String?
+  NIP           String?  @unique
+  REGON         String?  @unique
+  phone         String?
+  email         String?
+  country       String
+  province      String
+  postal_code   String
+  city          String
+  street        String
+  pallet        Pallet[]
 }
 
 model Pallet {
   id_pallet      Int      @id @default(autoincrement())
-  supplier       Supplier @relation(fields: [id_supplier], references: [id_supplier])
-  employee       Employee @relation(fields: [id_employee], references: [id_employee])
   id_supplier    Int
   id_employee    Int
+  pallet_name    String?
   purchase_price Float
   purchase_date  DateTime
   delivery_date  DateTime
+  employee       Employee @relation(fields: [id_employee], references: [id_employee])
+  supplier       Supplier @relation(fields: [id_supplier], references: [id_supplier])
   batch          Batch[]
 }
 
 model Category {
   id_category      Int                @id @default(autoincrement())
-  product_category Product_Category[]
-  name             String
+  category_name    String
   description      String
+  product_category Product_Category[]
 }
 
 model Product {
   id_product       Int                @id @default(autoincrement())
-  name             String
+  product_name     String
   EAN              String?
   ASIN             String?
   description      String?
-  product_category Product_Category[]
   batch            Batch[]
+  product_category Product_Category[]
 }
 
 model Product_Category {
   id_product_category Int      @id @default(autoincrement())
-  category            Category @relation(fields: [id_category], references: [id_category])
-  product             Product  @relation(fields: [id_product], references: [id_product])
   id_category         Int
   id_product          Int
+  category            Category @relation(fields: [id_category], references: [id_category])
+  product             Product  @relation(fields: [id_product], references: [id_product])
 }
 
 model Batch {
-  product              Product       @relation(fields: [id_product], references: [id_product])
-  condition            Condition     @relation(fields: [id_condition], references: [id_condition])
-  pallet               Pallet        @relation(fields: [id_pallet], references: [id_pallet])
   id_batch             Int           @id @default(autoincrement())
   id_product           Int
   id_condition         Int
   id_pallet            Int
+  batch_name           String?
   quantity_in_delivery Int
   quantity_in_stock    Int
   purchase_price       Float?
   selling_price        Float
   description          String?
+  condition            Condition     @relation(fields: [id_condition], references: [id_condition])
+  pallet               Pallet        @relation(fields: [id_pallet], references: [id_pallet])
+  product              Product       @relation(fields: [id_product], references: [id_product])
   batch_order          Batch_Order[]
 }
 
 model Condition {
-  id_condition Int     @id @default(autoincrement())
-  name         String
-  description  String
-  batch        Batch[]
+  id_condition   Int     @id @default(autoincrement())
+  condition_name String
+  description    String
+  batch          Batch[]
 }
 
 model Client {
   id_client    Int     @id @default(autoincrement())
-  user         User?   @relation(fields: [id_user], references: [id_user])
   id_user      Int?
   first_name   String
   last_name    String
@@ -140,54 +138,55 @@ model Client {
   postal_code  String
   city         String
   street       String
+  user         User?   @relation(fields: [id_user], references: [id_user])
   orders       Order[]
 }
 
 model User {
-  id_user  Int        @id @default(autoincrement())
-  email    String     @unique
-  password String
-  name     String
-  role     String
-  employee Employee[]
-  client   Client[]
+  id_user   Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  user_name String    @default("Nazwa")
+  role      String
+  client    Client[]
+  employee  Employee?
 }
 
 model Order {
-  client       Client         @relation(fields: [id_client], references: [id_client])
   id_order     Int            @id @default(autoincrement())
   id_client    Int
   order_date   DateTime
   order_price  Float
   comments     String?
+  client       Client         @relation(fields: [id_client], references: [id_client])
   batch_order  Batch_Order[]
   order_status Order_Status[]
 }
 
 model Batch_Order {
-  batch             Batch @relation(fields: [id_batch], references: [id_batch])
-  order             Order @relation(fields: [id_order], references: [id_order])
   id_batch_order    Int   @id @default(autoincrement())
   id_batch          Int
   id_order          Int
   quantity_in_order Int
+  batch             Batch @relation(fields: [id_batch], references: [id_batch])
+  order             Order @relation(fields: [id_order], references: [id_order])
 }
 
 model Status {
-  id_status      Int            @id @default(autoincrement())
-  name           String
   description    String
+  id_status      Int            @id @default(autoincrement())
+  status_name    String
   order_statuses Order_Status[]
 }
 
 model Order_Status {
-  status          Status   @relation(fields: [id_status], references: [id_status])
-  order           Order    @relation(fields: [id_order], references: [id_order])
-  employee        Employee @relation(fields: [id_employee], references: [id_employee])
   id_order_status Int      @id @default(autoincrement())
   id_status       Int
   id_order        Int
   id_employee     Int
   timestamp       DateTime
   comments        String?
+  employee        Employee @relation(fields: [id_employee], references: [id_employee])
+  order           Order    @relation(fields: [id_order], references: [id_order])
+  status          Status   @relation(fields: [id_status], references: [id_status])
 }

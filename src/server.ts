@@ -42,7 +42,7 @@ app.use(authMiddleware);
 app.use("/api/employees", employeesRoutes);
 app.use("/api/pallets", palletsRoutes);
 app.use("/api/companies", companiesRoutes);
-app.use("/api/supplier", suppliersRoutes);
+app.use("/api/suppliers", suppliersRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/users", usersRoutes);
 

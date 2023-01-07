@@ -5,7 +5,7 @@ import { generateErrorMessage } from "zod-error";
 import { ValidationError } from "../errors";
 
 const createSchema = z.object({
-  name: z.string(),
+  product_name: z.string(),
   EAN: z.string(),
   ASIN: z.string(),
   description: z.string(),
@@ -23,7 +23,7 @@ const createProduct = async (req: Request, res: Response) => {
 
   const product = await prisma.product.create({
     data: {
-      name: body.name,
+      product_name: body.product_name,
       EAN: body.EAN,
       ASIN: body.ASIN,
       description: body.description,
