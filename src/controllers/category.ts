@@ -20,10 +20,7 @@ const createCategory = async (req: Request, res: Response) => {
   const body = validation.data;
 
   const category = await prisma.category.create({
-    data: {
-      name: body.name,
-      description: body.description,
-    },
+    data: { category_name: body.name, description: body.description },
   });
   res.status(201).json(category);
 };

@@ -11,6 +11,8 @@ import companiesRoutes from "./routes/companies";
 import suppliersRoutes from "./routes/suppliers";
 import productsRoutes from "./routes/products";
 import usersRoutes from "./routes/users";
+import conditionsRoutes from "./routes/conditions";
+import batchesRoutes from "./routes/batches";
 import { errorHandlerMiddleware } from "./middlewares";
 import * as dotenv from "dotenv";
 import authMiddleware from "./middlewares/is-logged";
@@ -45,6 +47,8 @@ app.use("/api/companies", companiesRoutes);
 app.use("/api/suppliers", suppliersRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/conditions", conditionsRoutes);
+app.use("/api/batches", batchesRoutes);
 
 app.use(errorHandlerMiddleware);
 
