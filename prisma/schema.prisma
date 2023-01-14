@@ -148,6 +148,7 @@ model User {
   password  String
   user_name String    @default("Nazwa")
   role      String
+  avatar    String?   @default("imgae")
   client    Client[]
   employee  Employee?
 }

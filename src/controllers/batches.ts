@@ -42,6 +42,31 @@ const createBatch = async (req: Request, res: Response) => {
   res.status(201).json(batch);
 };
 
+const deleteBatch = async (req: Request, res: Response) => {
+  const batchesId = req.params.id
+    .split(",")
+    .map((e) => parseInt(e))
+    .filter((e) => !isNaN(e));
+
+  const currentLoggedUser = req.user;
+  if (!currentLoggedUser) {
+    throw Error("No user id in request object");
+  }
+  const batch = await prisma.batch.deleteMany({
+    where: {
+      id_batch: {
+        in: batchesId,
+      },
+      pallet: {
+        employee: {
+          id_user: currentLoggedUser,
+        },
+      },
+    },
+  });
+  res.status(201).json(batch);
+};
+
 const getAllBatches = async (req: Request, res: Response) => {
   console.log(req.user);
   const palettes = await prisma.batch.findMany();
@@ -68,6 +93,7 @@ const getMybatches = async (req: Request, res: Response) => {
 
 export default {
   createBatch,
+  deleteBatch,
   getAllBatches,
   getMybatches,
 };

@@ -57,6 +57,28 @@ const getAllPalettes = async (req: Request, res: Response) => {
   const palettes = await prisma.pallet.findMany();
   res.status(201).json(palettes);
 };
+const deletePallet = async (req: Request, res: Response) => {
+  const palletsId = req.params.id
+    .split(",")
+    .map((e) => parseInt(e))
+    .filter((e) => !isNaN(e));
+
+  const currentLoggedUser = req.user;
+  if (!currentLoggedUser) {
+    throw Error("No user id in request object");
+  }
+  const pallet = await prisma.pallet.deleteMany({
+    where: {
+      id_pallet: {
+        in: palletsId,
+      },
+      employee: {
+        id_user: currentLoggedUser,
+      },
+    },
+  });
+  res.status(201).json(pallet);
+};
 
 const getSelectedPalettes = async (req: Request, res: Response) => {
   console.log(req.params.id);
@@ -64,11 +86,6 @@ const getSelectedPalettes = async (req: Request, res: Response) => {
     .split(",")
     .map((e) => parseInt(e))
     .filter((e) => !isNaN(e));
-  // const palettes = await prisma.pallet.findMany({
-  //   where: {
-  //     id_pallet: { in: palettesId },
-  //   },
-  // });
 
   const palettes = await prisma.pallet.findMany({
     select: {
@@ -80,6 +97,7 @@ const getSelectedPalettes = async (req: Request, res: Response) => {
       supplier: true,
       batch: {
         select: {
+          id_batch: true,
           batch_name: true,
           quantity_in_delivery: true,
           quantity_in_stock: true,
@@ -165,16 +183,6 @@ const updatePallet = async (req: Request, res: Response) => {
   const currentLoggedUser = req.user;
 
   const body = validation.data;
-  console.log("test", body);
-  // let purchase_date_transformed = new Date(body.purchase_date).toISOString();
-  // if (typeof body?.purchase_date && typeof body?.purchase_date == "string") {
-  //   purchase_date_transformed = new Date(body.purchase_date).toISOString();
-  // }
-
-  // let delivery_date_transformed = new Date().toISOString();
-  // if (typeof body?.delivery_date && typeof body?.delivery_date == "string") {
-  //   delivery_date_transformed = new Date(body.delivery_date).toISOString();
-  // }
 
   const user = await prisma.pallet.update({
     where: {
@@ -191,6 +199,7 @@ const updatePallet = async (req: Request, res: Response) => {
 
 export default {
   createPallet,
+  deletePallet,
   getAllPalettes,
   getSelectedPalettes,
   getMyPallets,

@@ -3,6 +3,7 @@ export interface JwtTokenPayload {
   data: {
     user_id: number;
     login: string;
+    avatar: string;
   };
 }
 

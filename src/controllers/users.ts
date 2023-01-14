@@ -4,6 +4,7 @@ import { z } from "zod";
 import { generateErrorMessage } from "zod-error";
 import { ValidationError } from "../errors";
 import bcrypt from "bcrypt";
+import cloudinary from "../utils/cloudinary";
 
 const createSchema = z.object({
   user_name: z.string().min(1, { message: "name is required" }),
@@ -13,6 +14,7 @@ const createSchema = z.object({
     .email({ message: "provide valid email address" }),
   password: z.string().min(1, { message: "password is required" }),
   role: z.string(),
+  avatar: z.string().optional(),
 });
 
 const patchSchema = z.object({
@@ -24,6 +26,7 @@ const patchSchema = z.object({
     .optional(),
   password: z.string().min(1, { message: "password is required" }).optional(),
   role: z.string().optional(),
+  avatar: z.string().optional(),
 });
 
 const getAllUsers = async (req: Request, res: Response) => {

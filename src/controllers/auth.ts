@@ -16,6 +16,7 @@ const registerSchema = z.object({
     .email({ message: "provide valid email address" }),
   password: z.string().min(1, { message: "password is required" }),
   role: z.string(),
+  avatar: z.string().optional(),
 });
 
 const registerUser = async (req: Request, res: Response) => {
@@ -26,16 +27,14 @@ const registerUser = async (req: Request, res: Response) => {
     throw new ValidationError(errorMessage);
   }
 
-  const { email, password, user_name, role } = validation.data;
+  const data = validation.data;
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = await prisma.user.create({
       data: {
-        email: email,
+        ...data,
         password: hashedPassword,
-        user_name: user_name,
-        role: role,
       },
     });
     res.status(201).json(user);
@@ -79,10 +78,11 @@ const loginUser = async (req: Request, res: Response) => {
   if (isPasswordCorrect) {
     const token = jwt.sign(
       {
-        exp: Math.floor(Date.now() / 1000) + 60 * 60,
+        exp: Math.floor(Date.now() / 1000) + 12 * 60 * 60,
         data: {
           user_id: user.id_user,
           login: user.user_name,
+          avatar: user.avatar,
         },
       },
       process.env.SESSION_SECRET!
@@ -92,6 +92,7 @@ const loginUser = async (req: Request, res: Response) => {
         id: user.id_user,
         name: user.user_name,
         role: user.role,
+        avatar: user.avatar,
       },
       token,
     });

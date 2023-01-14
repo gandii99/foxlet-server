@@ -13,6 +13,7 @@ import productsRoutes from "./routes/products";
 import usersRoutes from "./routes/users";
 import conditionsRoutes from "./routes/conditions";
 import batchesRoutes from "./routes/batches";
+import imagesRoutes from "./routes/images";
 import { errorHandlerMiddleware } from "./middlewares";
 import * as dotenv from "dotenv";
 import authMiddleware from "./middlewares/is-logged";
@@ -49,6 +50,7 @@ app.use("/api/products", productsRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/conditions", conditionsRoutes);
 app.use("/api/batches", batchesRoutes);
+app.use("/api/images", imagesRoutes);
 
 app.use(errorHandlerMiddleware);
 
