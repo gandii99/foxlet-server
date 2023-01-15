@@ -146,9 +146,10 @@ model User {
   id_user   Int       @id @default(autoincrement())
   email     String    @unique
   password  String
-  user_name String    @default("Nazwa")
+  user_name String    @default("Użytkownik")
   role      String
-  avatar    String?   @default("imgae")
+  avatar    String?
+  active    Boolean   @default(true)
   client    Client[]
   employee  Employee?
 }

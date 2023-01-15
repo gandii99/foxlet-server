@@ -6,7 +6,6 @@ import { ValidationError } from "../errors";
 
 const createSchema = z.object({
   id_supplier: z.number(),
-  id_employee: z.number().optional(),
   pallet_name: z.string().optional(),
   purchase_price: z.number(),
   purchase_date: z.string().min(1),

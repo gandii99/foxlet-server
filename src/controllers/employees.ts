@@ -31,11 +31,10 @@ const patchSchema = z.object({
   first_name: z.string().min(1, { message: "name is required" }).optional(),
   last_name: z.string().min(1, { message: "lastName is required" }).optional(),
   PESEL: z.string().length(11, { message: "PESEL is invalid" }).optional(),
-  phone: z
-    .string()
-    .min(9, { message: "Phone number is too short" })
-    .max(12, { message: "Phone number is too long" })
-    .optional(),
+  phone: z.preprocess(
+    (val) => (val ? val : null),
+    z.string().min(9).max(12).nullable()
+  ),
   email: z
     .string()
     .min(1, { message: "email is required" })
@@ -126,8 +125,9 @@ const updateMyEmployeeProfileData = async (req: Request, res: Response) => {
       id_user: currentLoggedUser,
     },
     data: {
-      id_company: body?.id_company || undefined,
       ...body,
+      id_company: body?.id_company || undefined,
+      phone: body?.phone || "",
     },
   });
   res.status(200).json(employee);

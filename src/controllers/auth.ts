@@ -16,7 +16,7 @@ const registerSchema = z.object({
     .email({ message: "provide valid email address" }),
   password: z.string().min(1, { message: "password is required" }),
   role: z.string(),
-  avatar: z.string().optional(),
+  // avatar: z.string().optional(),
 });
 
 const registerUser = async (req: Request, res: Response) => {
@@ -28,6 +28,16 @@ const registerUser = async (req: Request, res: Response) => {
   }
 
   const data = validation.data;
+
+  const user = await prisma.user.findFirst({
+    where: {
+      email: data.email,
+    },
+  });
+
+  if (user != null) {
+    throw new ValidationError("User with that email is exist");
+  }
 
   try {
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -66,14 +76,11 @@ const loginUser = async (req: Request, res: Response) => {
     },
   });
 
-  console.log(user);
-
   if (user == null) {
     throw new NotFoundError("No user with that email");
   }
 
   const isPasswordCorrect = await bcrypt.compare(password, user.password);
-  console.log("proccessss", process.env.SESSION_SECRET);
 
   if (isPasswordCorrect) {
     const token = jwt.sign(
@@ -89,8 +96,8 @@ const loginUser = async (req: Request, res: Response) => {
     );
     res.status(200).json({
       user: {
-        id: user.id_user,
-        name: user.user_name,
+        id_user: user.id_user,
+        user_name: user.user_name,
         role: user.role,
         avatar: user.avatar,
       },
