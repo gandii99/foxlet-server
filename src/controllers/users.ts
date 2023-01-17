@@ -96,6 +96,7 @@ const updateMyUserProfileData = async (req: Request, res: Response) => {
     },
     data: body,
   });
+
   res.status(201).json(user);
 };
 

@@ -5,18 +5,27 @@ import { generateErrorMessage } from "zod-error";
 import { ValidationError } from "../errors";
 
 const createSchema = z.object({
-  first_name: z.string(),
-  last_name: z.string(),
-  supplier_name: z.string(),
-  NIP: z.string(),
-  REGON: z.string(),
-  phone: z.string(),
-  email: z.string(),
-  country: z.string(),
-  province: z.string(),
-  postal_code: z.string(),
-  city: z.string(),
-  street: z.string(),
+  first_name: z.string().min(1),
+  last_name: z.string().min(1),
+  supplier_name: z.string().optional(),
+  NIP: z.preprocess(
+    (val) =>
+      (val && typeof val === "string" && val.length > 1 && val) || undefined,
+    z.string().min(10, { message: "password is required" }).optional()
+  ),
+
+  REGON: z.preprocess(
+    (val) =>
+      (val && typeof val === "string" && val.length > 1 && val) || undefined,
+    z.string().min(10, { message: "password is required" }).optional()
+  ),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  country: z.string().min(1),
+  province: z.string().min(1),
+  postal_code: z.string().min(1),
+  city: z.string().min(1),
+  street: z.string().min(1),
 });
 
 const createSupplier = async (req: Request, res: Response) => {
@@ -30,20 +39,7 @@ const createSupplier = async (req: Request, res: Response) => {
   const body = validation.data;
 
   const supplier = await prisma.supplier.create({
-    data: {
-      first_name: body.first_name,
-      last_name: body.last_name,
-      supplier_name: body.supplier_name,
-      NIP: body.NIP,
-      REGON: body.REGON,
-      phone: body.phone,
-      email: body.email,
-      country: body.country,
-      province: body.province,
-      postal_code: body.postal_code,
-      city: body.city,
-      street: body.street,
-    },
+    data: body,
   });
   res.status(201).json(supplier);
 };

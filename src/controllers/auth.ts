@@ -7,6 +7,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { NotFoundError } from "../errors/not-found-error";
 import { UnautenticatedError } from "../errors/unautenticated-error";
+import { CustomError } from "../errors";
 
 const registerSchema = z.object({
   user_name: z.string().min(1, { message: "name is required" }),
@@ -47,6 +48,28 @@ const registerUser = async (req: Request, res: Response) => {
         password: hashedPassword,
       },
     });
+
+    if (!user) throw new ValidationError("Problem z rejestracją");
+
+    const employeeProfile = await prisma.employee.create({
+      data: {
+        id_user: user.id_user,
+        first_name: "",
+        last_name: "",
+        PESEL: "",
+        phone: "",
+        email: "",
+        country: "",
+        province: "",
+        postal_code: "",
+        city: "",
+        street: "",
+      },
+    });
+
+    if (!employeeProfile)
+      throw new ValidationError("Problem z rejestracją profilu");
+
     res.status(201).json(user);
   } catch {
     res.status(500).json("CustomErr");

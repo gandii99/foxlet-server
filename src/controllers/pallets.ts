@@ -14,7 +14,6 @@ const createSchema = z.object({
 
 const patchSchema = z.object({
   id_supplier: z.number().optional(),
-  id_employee: z.number().optional(),
   pallet_name: z.string().optional(),
   purchase_price: z.number().optional(),
   purchase_date: z.string().min(1).optional(),
