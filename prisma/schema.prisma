@@ -11,7 +11,7 @@ model Company {
   id_company   Int        @id @default(autoincrement())
   first_name   String
   last_name    String
-  company_name String
+  company_name String     @unique
   NIP          String     @unique
   REGON        String?    @unique
   phone        String
@@ -27,10 +27,11 @@ model Company {
 model Employee {
   id_employee  Int            @id @default(autoincrement())
   id_company   Int?
+  is_owner     Boolean        @default(false)
   id_user      Int            @unique
   first_name   String
   last_name    String
-  PESEL        String
+  PESEL        String         @unique
   phone        String
   email        String
   country      String

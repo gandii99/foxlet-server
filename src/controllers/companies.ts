@@ -67,10 +67,9 @@ const createCompany = async (req: Request, res: Response) => {
     },
     data: {
       id_company: company.id_company,
+      is_owner: true,
     },
   });
-  console.log(company);
-  console.log(employee);
   res.status(201).json(company);
 };
 
@@ -102,6 +101,24 @@ const getMyCompanProfile = async (req: Request, res: Response) => {
     throw Error("No user id in request object");
   }
   const company = await prisma.company.findFirst({
+    select: {
+      id_company: true,
+      first_name: true,
+      last_name: true,
+      company_name: true,
+      NIP: true,
+      REGON: true,
+      phone: true,
+      email: true,
+      country: true,
+      province: true,
+      postal_code: true,
+      city: true,
+      street: true,
+      employee: {
+        where: { id_user: currentLoggedUser },
+      },
+    },
     where: {
       employee: {
         some: {
