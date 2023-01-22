@@ -87,20 +87,8 @@ const getMybatches = async (req: Request, res: Response) => {
       purchase_price: true,
       selling_price: true,
       description: true,
-      condition: {
-        select: {
-          id_condition: true,
-          condition_name: true,
-          description: true,
-        },
-      },
-      pallet: {
-        select: {
-          delivery_date: true,
-          pallet_name: true,
-          purchase_date: true,
-        },
-      },
+      condition: true,
+      pallet: true,
       product: {
         select: {
           product_name: true,
