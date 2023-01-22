@@ -3,52 +3,10 @@ import { Request, Response } from "express";
 import { number, z } from "zod";
 import { generateErrorMessage } from "zod-error";
 import { ValidationError } from "../errors";
-
-const createSchema = z.object({
-  id_company: z.number().optional(),
-  // id_user: z.number(),
-  first_name: z.string().min(1, { message: "name is required" }),
-  last_name: z.string().min(1, { message: "lastName is required" }),
-  PESEL: z.string().length(11, { message: "PESEL is invalid" }),
-  phone: z
-    .string()
-    .min(9, { message: "Phone number is too short" })
-    .max(12, { message: "Phone number is too long" }),
-  email: z
-    .string()
-    .min(1, { message: "email is required" })
-    .email({ message: "provide valid email address" }),
-  country: z.string(),
-  province: z.string(),
-  postal_code: z.string(),
-  city: z.string(),
-  street: z.string(),
-});
-
-const patchSchema = z.object({
-  id_company: z.number().optional(),
-  // id_user: z.number().optional(),
-  first_name: z.string().min(1, { message: "name is required" }).optional(),
-  last_name: z.string().min(1, { message: "lastName is required" }).optional(),
-  PESEL: z.string().length(11, { message: "PESEL is invalid" }).optional(),
-  phone: z.preprocess(
-    (val) => (val ? val : null),
-    z.string().min(9).max(12).nullable()
-  ),
-  email: z
-    .string()
-    .min(1, { message: "email is required" })
-    .email({ message: "provide valid email address" })
-    .optional(),
-  country: z.string().optional(),
-  province: z.string().optional(),
-  postal_code: z.string().optional(),
-  city: z.string().optional(),
-  street: z.string().optional(),
-});
+import { createEmployeeSchema, patchEmployeeSchema } from "./types";
 
 const createEmployee = async (req: Request, res: Response) => {
-  const validation = createSchema.safeParse(req.body);
+  const validation = createEmployeeSchema.safeParse(req.body);
 
   if (!validation.success) {
     const errorMessage = generateErrorMessage(validation.error.issues);
@@ -69,7 +27,7 @@ const createEmployee = async (req: Request, res: Response) => {
       id_user: currentLoggedUser,
       first_name: body.first_name,
       last_name: body.last_name,
-      PESEL: body.PESEL,
+      PESEL: body.PESEL || undefined,
       phone: body.phone,
       email: body.email,
       country: body.country,
@@ -102,7 +60,7 @@ const getMyEmployeeProfile = async (req: Request, res: Response) => {
 };
 
 const updateMyEmployeeProfileData = async (req: Request, res: Response) => {
-  const validation = patchSchema.safeParse(req.body);
+  const validation = patchEmployeeSchema.safeParse(req.body);
 
   if (!validation.success) {
     const errorMessage = generateErrorMessage(validation.error.issues);

@@ -78,7 +78,45 @@ const getMybatches = async (req: Request, res: Response) => {
   if (!currentLoggedUser) {
     throw Error("No user id in request object");
   }
-  const batches = await prisma.batch.findFirst({
+  const batches = await prisma.batch.findMany({
+    select: {
+      id_batch: true,
+      batch_name: true,
+      quantity_in_delivery: true,
+      quantity_in_stock: true,
+      purchase_price: true,
+      selling_price: true,
+      description: true,
+      condition: {
+        select: {
+          id_condition: true,
+          condition_name: true,
+          description: true,
+        },
+      },
+      pallet: {
+        select: {
+          delivery_date: true,
+          pallet_name: true,
+          purchase_date: true,
+        },
+      },
+      product: {
+        select: {
+          product_name: true,
+          EAN: true,
+          ASIN: true,
+          description: true,
+          category: {
+            select: {
+              category_name: true,
+              description: true,
+              id_category: true,
+            },
+          },
+        },
+      },
+    },
     where: {
       pallet: {
         employee: {

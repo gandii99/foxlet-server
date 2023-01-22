@@ -6,6 +6,7 @@ import { ValidationError } from "../errors";
 
 const createSchema = z.object({
   product_name: z.string(),
+  id_category: z.number(),
   EAN: z.string(),
   ASIN: z.string(),
   description: z.string(),
@@ -22,18 +23,58 @@ const createProduct = async (req: Request, res: Response) => {
   const body = validation.data;
 
   const product = await prisma.product.create({
-    data: {
-      product_name: body.product_name,
-      EAN: body.EAN,
-      ASIN: body.ASIN,
-      description: body.description,
-    },
+    data: body,
   });
   res.status(201).json(product);
 };
 
 const getAllProducts = async (req: Request, res: Response) => {
   const products = await prisma.product.findMany();
+  res.status(201).json(products);
+};
+
+const getMyProducts = async (req: Request, res: Response) => {
+  const currentLoggedUser = req.user;
+
+  if (!currentLoggedUser) {
+    throw Error("No user id in request object");
+  }
+
+  //Ilość sztuk
+  const products = await prisma.product.findMany({
+    select: {
+      id_product: true,
+      product_name: true,
+      EAN: true,
+      ASIN: true,
+      batch: {
+        select: {
+          quantity_in_stock: true,
+          description: true,
+        },
+      },
+    },
+    where: {
+      batch: {
+        some: {
+          pallet: {
+            employee: {
+              id_user: currentLoggedUser,
+            },
+          },
+        },
+      },
+      AND: {
+        batch: {
+          some: {
+            quantity_in_stock: {
+              gt: 0,
+            },
+          },
+        },
+      },
+    },
+  });
   res.status(201).json(products);
 };
 
@@ -54,5 +95,6 @@ const getSelectedProducts = async (req: Request, res: Response) => {
 export default {
   createProduct,
   getAllProducts,
+  getMyProducts,
   getSelectedProducts,
 };

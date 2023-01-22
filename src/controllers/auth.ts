@@ -56,7 +56,6 @@ const registerUser = async (req: Request, res: Response) => {
         id_user: user.id_user,
         first_name: "",
         last_name: "",
-        PESEL: "",
         phone: "",
         email: "",
         country: "",
@@ -71,8 +70,8 @@ const registerUser = async (req: Request, res: Response) => {
       throw new ValidationError("Problem z rejestracją profilu");
 
     res.status(201).json(user);
-  } catch {
-    res.status(500).json("CustomErr");
+  } catch (error) {
+    res.status(500).json(error);
   }
 };
 

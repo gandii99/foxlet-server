@@ -13,10 +13,18 @@ import productsRoutes from "./routes/products";
 import usersRoutes from "./routes/users";
 import conditionsRoutes from "./routes/conditions";
 import batchesRoutes from "./routes/batches";
-import imagesRoutes from "./routes/images";
+import clientsRoutes from "./routes/clients";
+import categoriesRoutes from "./routes/categories";
 import { errorHandlerMiddleware } from "./middlewares";
 import * as dotenv from "dotenv";
 import authMiddleware from "./middlewares/is-logged";
+import { prisma } from "./lib/prisma-client";
+import {
+  order_status_database,
+  products_database,
+  product_categories_database,
+  product_condition_database,
+} from "../prisma/data_to_base";
 
 dotenv.config();
 
@@ -32,6 +40,24 @@ app.use(
 const jsonParser = bodyParser.json();
 app.use(jsonParser);
 app.use(morgan("tiny"));
+// async function initData() {
+//   const category = await prisma.category.findMany();
+//   if (category.length <= 0) {
+//     const statuses = await prisma.status.createMany({
+//       data: order_status_database,
+//     });
+//     const conditions = await prisma.condition.createMany({
+//       data: product_condition_database,
+//     });
+//     const categories = await prisma.category.createMany({
+//       data: product_categories_database,
+//     });
+//     const products = await prisma.product.createMany({
+//       data: products_database,
+//     });
+//   }
+// }
+// initData();
 
 app.get("/", async (req: Request, res: Response) => {
   // const companies = await prisma.firma.findMany();
@@ -50,7 +76,8 @@ app.use("/api/products", productsRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/conditions", conditionsRoutes);
 app.use("/api/batches", batchesRoutes);
-app.use("/api/images", imagesRoutes);
+app.use("/api/clients", clientsRoutes);
+app.use("/api/categories", categoriesRoutes);
 
 app.use(errorHandlerMiddleware);
 
