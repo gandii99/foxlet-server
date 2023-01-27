@@ -92,6 +92,7 @@ const getMybatches = async (req: Request, res: Response) => {
       product: {
         select: {
           product_name: true,
+          image: true,
           EAN: true,
           ASIN: true,
           description: true,

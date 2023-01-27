@@ -15,6 +15,7 @@ import conditionsRoutes from "./routes/conditions";
 import batchesRoutes from "./routes/batches";
 import clientsRoutes from "./routes/clients";
 import categoriesRoutes from "./routes/categories";
+import categoriesOrders from "./routes/orders";
 import { errorHandlerMiddleware } from "./middlewares";
 import * as dotenv from "dotenv";
 import authMiddleware from "./middlewares/is-logged";
@@ -78,6 +79,7 @@ app.use("/api/conditions", conditionsRoutes);
 app.use("/api/batches", batchesRoutes);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/categories", categoriesRoutes);
+app.use("/api/orders", categoriesOrders);
 
 app.use(errorHandlerMiddleware);
 

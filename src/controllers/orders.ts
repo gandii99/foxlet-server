@@ -9,8 +9,12 @@ const createOrderSchema = z.object({
   order_date: z.string().min(1),
   order_price: z.number(),
   comments: z.string().optional(),
-  id_batch: z.number(),
-  quantity_in_order: z.number(),
+  batches: z.array(
+    z.object({
+      id_batch: z.number(),
+      quantity_in_order: z.number(),
+    })
+  ),
 });
 
 const patchOrderSchema = z.object({
@@ -30,7 +34,7 @@ const createOrder = async (req: Request, res: Response) => {
 
   const body = validation.data;
   const currentLoggedUser = req.user;
-
+  console.log("currentLoggedUser", currentLoggedUser);
   if (!currentLoggedUser) {
     throw Error("No user id in request object");
   }
@@ -41,23 +45,68 @@ const createOrder = async (req: Request, res: Response) => {
     },
   });
 
-  if (employee.length <= 0) {
+  if (!employee[0]) {
     throw new CustomError("Employee not exists");
+  } else {
+    console.log("employee done");
   }
 
+  body.batches.map(async (batch) => {
+    const currentBatch = await prisma.batch.findFirst({
+      where: {
+        id_batch: batch.id_batch,
+      },
+    });
+    if (
+      currentBatch &&
+      currentBatch.quantity_in_stock < batch.quantity_in_order
+    ) {
+      res.status(404).json({
+        error: {
+          message: `Not enough product in stock ${currentBatch?.id_batch}`,
+        },
+      });
+      // throw new CustomError(
+      //   `Not enough product in stock ${currentBatch?.id_product}`
+      // );
+    }
+  });
+
   const order = await prisma.order.create({
-    data: body,
+    data: {
+      id_client: body.id_client,
+      order_date: body.order_date,
+      order_price: body.order_price,
+      comments: body.comments,
+    },
   });
 
   if (!order) {
     throw new CustomError("Problem with order");
   }
+  const batchTransaction: any[] = [];
 
-  const batch_order = await prisma.batch_Order.create({
-    data: { ...body, id_order: order.id_order },
+  body.batches.forEach((batch) => {
+    const updateResult = prisma.batch.update({
+      data: {
+        quantity_in_stock: {
+          decrement: batch.quantity_in_order,
+        },
+      },
+      where: {
+        id_batch: batch.id_batch,
+      },
+    });
+    batchTransaction.push(updateResult);
+    const createResult = prisma.batch_Order.create({
+      data: { ...batch, id_order: order.id_order },
+    });
+    batchTransaction.push(createResult);
   });
 
-  if (!batch_order) {
+  const batch_order = await prisma.$transaction(batchTransaction);
+
+  if (batch_order.length <= 0) {
     await prisma.order.delete({
       where: {
         id_order: order.id_order,
@@ -76,9 +125,10 @@ const createOrder = async (req: Request, res: Response) => {
   });
 
   if (!order_status) {
-    await prisma.batch_Order.delete({
+    const batchOrdersId = batch_order.map((batch) => batch.id_batch_order);
+    await prisma.batch_Order.deleteMany({
       where: {
-        id_batch_order: batch_order.id_batch_order,
+        id_batch_order: { in: batchOrdersId },
       },
     });
     await prisma.order.delete({
@@ -90,6 +140,7 @@ const createOrder = async (req: Request, res: Response) => {
   }
 
   res.status(201).json(order);
+  // res.status(201).json("done");
 };
 
 const getMyOrders = async (req: Request, res: Response) => {
@@ -103,6 +154,9 @@ const getMyOrders = async (req: Request, res: Response) => {
   const orders = await prisma.order.findMany({
     select: {
       id_order: true,
+      order_date: true,
+      order_price: true,
+      comments: true,
       order_status: {
         select: {
           id_order_status: true,
@@ -113,10 +167,28 @@ const getMyOrders = async (req: Request, res: Response) => {
         },
       },
       client: true,
-      order_date: true,
-      order_price: true,
-      comments: true,
-      batch_order: true,
+      batch_order: {
+        select: {
+          quantity_in_order: true,
+          id_batch: true,
+          batch: {
+            select: {
+              batch_name: true,
+              condition: true,
+              product: {
+                select: {
+                  id_product: true,
+                  product_name: true,
+                  image: true,
+                  EAN: true,
+                  ASIN: true,
+                  category: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
     where: {
       order_status: {
@@ -132,85 +204,23 @@ const getMyOrders = async (req: Request, res: Response) => {
 };
 
 const deleteOrder = async (req: Request, res: Response) => {
-  const orderId = req.params.id
-    .split(",")
-    .map((e) => parseInt(e))
-    .filter((e) => !isNaN(e));
+  const orderId = Number(req.params.id);
 
   const currentLoggedUser = req.user;
   if (!currentLoggedUser) {
     throw Error("No user id in request object");
   }
-  const order = await prisma.order.deleteMany({
+
+  const order = await prisma.order.delete({
     where: {
-      id_order: {
-        in: orderId,
-      },
-      AND: {
-        order_status: {
-          some: {
-            employee: {
-              id_user: currentLoggedUser,
-            },
-          },
-        },
-      },
+      id_order: orderId,
     },
   });
   res.status(201).json(order);
 };
 
-// const getSelectedPalettes = async (req: Request, res: Response) => {
-//   console.log(req.params.id);
-//   const palettesId = req.params.id
-//     .split(",")
-//     .map((e) => parseInt(e))
-//     .filter((e) => !isNaN(e));
-
-//   const palettes = await prisma.pallet.findMany({
-//     select: {
-//       id_pallet: true,
-//       pallet_name: true,
-//       purchase_price: true,
-//       purchase_date: true,
-//       delivery_date: true,
-//       supplier: true,
-//       batch: {
-//         select: {
-//           id_batch: true,
-//           batch_name: true,
-//           quantity_in_delivery: true,
-//           quantity_in_stock: true,
-//           purchase_price: true,
-//           selling_price: true,
-//           description: true,
-//           condition: true,
-//           product: true,
-//         },
-//       },
-//     },
-//     where: {
-//       id_pallet: { in: palettesId },
-//     },
-//   });
-//   // res.status(201).json(palettes);
-//   // res.status(201).json(
-//   //   palettes.forEach((pallet) => ({
-//   //     ...pallet,
-//   //     purchase_date: pallet.purchase_date.toISOString(),
-//   //     delivery_date: pallet.delivery_date.toISOString(),
-//   //   }))
-//   // );
-//   palettes.forEach((pallet) => ({
-//     ...pallet,
-//     purchase_date: pallet.purchase_date.toISOString(),
-//     delivery_date: pallet.delivery_date.toISOString(),
-//   }));
-
-//   res.status(201).json(palettes);
-// };
-
 export default {
   createOrder,
   getMyOrders,
+  deleteOrder,
 };

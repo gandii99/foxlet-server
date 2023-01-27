@@ -132,6 +132,7 @@ const deleteMyAccount = async (req: Request, res: Response) => {
       },
     },
   });
+
   if (pallets.length > 0) {
     tabToTransaction.push(
       prisma.pallet.deleteMany({

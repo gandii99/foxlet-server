@@ -44,6 +44,7 @@ const getMyProducts = async (req: Request, res: Response) => {
   const products = await prisma.product.findMany({
     select: {
       id_product: true,
+      image: true,
       product_name: true,
       EAN: true,
       ASIN: true,

@@ -28,7 +28,7 @@ model Company {
   street       String
   employee     Employee[] @relation(name: "employees")
   // clients      Client[]   @relation(name: "clients")
-  owner        Employee   @relation(name: "owner", fields: [id_owner], references: [id_employee])
+  owner        Employee   @relation(name: "owner", fields: [id_owner], references: [id_employee], onDelete: Cascade)
   // Client       Client[]
 }
 
@@ -48,7 +48,7 @@ model Employee {
   street       String
   company      Company?       @relation(name: "employees", fields: [id_company], references: [id_company])
   myCompany    Company?       @relation(name: "owner")
-  user         User           @relation(fields: [id_user], references: [id_user])
+  user         User           @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
   order_status Order_Status[]
   Pallet       Pallet[]
   Client       Client[]
@@ -79,7 +79,7 @@ model Pallet {
   purchase_price Float
   purchase_date  DateTime
   delivery_date  DateTime
-  employee       Employee @relation(fields: [id_employee], references: [id_employee])
+  employee       Employee @relation(fields: [id_employee], references: [id_employee], onDelete: Cascade)
   supplier       Supplier @relation(fields: [id_supplier], references: [id_supplier])
   batch          Batch[]
 }
@@ -98,6 +98,7 @@ model Product {
   EAN          String?
   ASIN         String?
   description  String?
+  image        String?
   batch        Batch[]
   // product_category Product_Category[]
   category     Category @relation(fields: [id_category], references: [id_category])
@@ -123,7 +124,7 @@ model Batch {
   selling_price        Float
   description          String?
   condition            Condition     @relation(fields: [id_condition], references: [id_condition])
-  pallet               Pallet        @relation(fields: [id_pallet], references: [id_pallet])
+  pallet               Pallet        @relation(fields: [id_pallet], references: [id_pallet], onDelete: Cascade)
   product              Product       @relation(fields: [id_product], references: [id_product])
   batch_order          Batch_Order[]
 }
@@ -177,7 +178,7 @@ model Order {
   order_date   DateTime
   order_price  Float
   comments     String?
-  client       Client         @relation(fields: [id_client], references: [id_client])
+  client       Client         @relation(fields: [id_client], references: [id_client], onDelete: Cascade)
   batch_order  Batch_Order[]
   order_status Order_Status[]
 }
@@ -187,8 +188,8 @@ model Batch_Order {
   id_batch          Int
   id_order          Int
   quantity_in_order Int
-  batch             Batch @relation(fields: [id_batch], references: [id_batch])
-  order             Order @relation(fields: [id_order], references: [id_order])
+  batch             Batch @relation(fields: [id_batch], references: [id_batch], onDelete: Cascade)
+  order             Order @relation(fields: [id_order], references: [id_order], onDelete: Cascade)
 }
 
 model Status {
@@ -206,6 +207,6 @@ model Order_Status {
   timestamp       DateTime
   comments        String?
   employee        Employee @relation(fields: [id_employee], references: [id_employee])
-  order           Order    @relation(fields: [id_order], references: [id_order])
+  order           Order    @relation(fields: [id_order], references: [id_order], onDelete: Cascade)
   status          Status   @relation(fields: [id_status], references: [id_status])
 }
