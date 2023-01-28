@@ -29,7 +29,32 @@ const createProduct = async (req: Request, res: Response) => {
 };
 
 const getAllProducts = async (req: Request, res: Response) => {
-  const products = await prisma.product.findMany();
+  const products = await prisma.product.findMany({
+    select: {
+      id_product: true,
+      id_category: true,
+      image: true,
+      product_name: true,
+      description: true,
+      EAN: true,
+      ASIN: true,
+      category: {
+        select: {
+          category_name: true,
+          id_category: true,
+          description: true,
+        },
+      },
+    },
+    orderBy: [
+      {
+        id_category: "asc",
+      },
+      {
+        product_name: "asc",
+      },
+    ],
+  });
   res.status(201).json(products);
 };
 
@@ -44,10 +69,19 @@ const getMyProducts = async (req: Request, res: Response) => {
   const products = await prisma.product.findMany({
     select: {
       id_product: true,
+      id_category: true,
       image: true,
       product_name: true,
+      description: true,
       EAN: true,
       ASIN: true,
+      category: {
+        select: {
+          category_name: true,
+          id_category: true,
+          description: true,
+        },
+      },
       batch: {
         select: {
           quantity_in_stock: true,
@@ -75,6 +109,14 @@ const getMyProducts = async (req: Request, res: Response) => {
         },
       },
     },
+    orderBy: [
+      {
+        id_category: "asc",
+      },
+      {
+        product_name: "asc",
+      },
+    ],
   });
   res.status(201).json(products);
 };
