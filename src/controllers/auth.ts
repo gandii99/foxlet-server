@@ -16,7 +16,7 @@ const registerSchema = z.object({
     .min(1, { message: "email is required" })
     .email({ message: "provide valid email address" }),
   password: z.string().min(1, { message: "password is required" }),
-  role: z.string(),
+  role: z.string().optional(),
   // avatar: z.string().optional(),
 });
 

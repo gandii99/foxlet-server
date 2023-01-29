@@ -15,17 +15,12 @@ import conditionsRoutes from "./routes/conditions";
 import batchesRoutes from "./routes/batches";
 import clientsRoutes from "./routes/clients";
 import categoriesRoutes from "./routes/categories";
-import categoriesOrders from "./routes/orders";
+import ordersRoutes from "./routes/orders";
+import statusesRoutes from "./routes/statuses";
 import { errorHandlerMiddleware } from "./middlewares";
 import * as dotenv from "dotenv";
 import authMiddleware from "./middlewares/is-logged";
 import { prisma } from "./lib/prisma-client";
-import {
-  order_status_database,
-  products_database,
-  product_categories_database,
-  product_condition_database,
-} from "../prisma/data_to_base";
 
 dotenv.config();
 
@@ -79,7 +74,8 @@ app.use("/api/conditions", conditionsRoutes);
 app.use("/api/batches", batchesRoutes);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/categories", categoriesRoutes);
-app.use("/api/orders", categoriesOrders);
+app.use("/api/orders", ordersRoutes);
+app.use("/api/statuses", statusesRoutes);
 
 app.use(errorHandlerMiddleware);
 

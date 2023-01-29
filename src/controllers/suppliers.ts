@@ -36,10 +36,23 @@ const createSupplier = async (req: Request, res: Response) => {
     throw new ValidationError(errorMessage);
   }
 
+  const currentLoggedUser = req.user;
+  if (!currentLoggedUser) {
+    throw Error("No user id in request object");
+  }
+
+  const employee = await prisma.employee.findUnique({
+    where: { id_user: currentLoggedUser },
+  });
+
+  if (!employee) {
+    throw Error("No employee in request object");
+  }
+
   const body = validation.data;
 
   const supplier = await prisma.supplier.create({
-    data: body,
+    data: { ...body, id_employee: employee.id_employee },
   });
   res.status(201).json(supplier);
 };
@@ -53,17 +66,23 @@ interface UserType {
 
 const getMySuppliers = async (req: Request, res: Response) => {
   console.log(req.user);
+
   const currentLoggedUser = req.user;
+  if (!currentLoggedUser) {
+    throw Error("No user id in request object");
+  }
+
+  const employee = await prisma.employee.findUnique({
+    where: { id_user: currentLoggedUser },
+  });
+
+  if (!employee) {
+    throw Error("No employee in request object");
+  }
 
   const suppliers = await prisma.supplier.findMany({
     where: {
-      pallet: {
-        some: {
-          employee: {
-            id_user: currentLoggedUser,
-          },
-        },
-      },
+      id_employee: employee.id_employee,
     },
   });
   res.status(201).json(suppliers);
@@ -89,9 +108,29 @@ const getSelectedSuppliers = async (req: Request, res: Response) => {
   res.status(201).json(suppliers);
 };
 
+const deleteSupplier = async (req: Request, res: Response) => {
+  const supplierId = Number(req.params.id);
+
+  const currentLoggedUser = req.user;
+  if (!currentLoggedUser) {
+    throw Error("No user id in request object");
+  }
+
+  const pallet = await prisma.supplier.deleteMany({
+    where: {
+      id_supplier: supplierId,
+      employee: {
+        id_user: currentLoggedUser,
+      },
+    },
+  });
+  res.status(201).json(pallet);
+};
+
 export default {
   createSupplier,
   getMySuppliers,
   getAllSuppliers,
   getSelectedSuppliers,
+  deleteSupplier,
 };

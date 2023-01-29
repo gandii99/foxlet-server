@@ -107,6 +107,56 @@ const getMybatches = async (req: Request, res: Response) => {
       },
     },
     where: {
+      quantity_in_stock: {
+        gt: 0,
+      },
+      pallet: {
+        employee: {
+          id_user: currentLoggedUser,
+        },
+      },
+    },
+  });
+
+  res.status(200).json(batches);
+};
+const getMybatchesOutOfStock = async (req: Request, res: Response) => {
+  const currentLoggedUser = req.user;
+  if (!currentLoggedUser) {
+    throw Error("No user id in request object");
+  }
+  const batches = await prisma.batch.findMany({
+    select: {
+      id_batch: true,
+      batch_name: true,
+      quantity_in_delivery: true,
+      quantity_in_stock: true,
+      purchase_price: true,
+      selling_price: true,
+      description: true,
+      condition: true,
+      pallet: true,
+      product: {
+        select: {
+          product_name: true,
+          image: true,
+          EAN: true,
+          ASIN: true,
+          description: true,
+          category: {
+            select: {
+              category_name: true,
+              description: true,
+              id_category: true,
+            },
+          },
+        },
+      },
+    },
+    where: {
+      quantity_in_stock: {
+        lte: 0,
+      },
       pallet: {
         employee: {
           id_user: currentLoggedUser,
@@ -123,4 +173,5 @@ export default {
   deleteBatch,
   getAllBatches,
   getMybatches,
+  getMybatchesOutOfStock,
 };

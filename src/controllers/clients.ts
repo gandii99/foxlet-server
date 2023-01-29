@@ -114,18 +114,23 @@ const updateMyClient = async (req: Request, res: Response) => {
   res.status(201).json(employee);
 };
 
-const deleteMyCompany = async (req: Request, res: Response) => {
+const deleteClient = async (req: Request, res: Response) => {
+  const clientId = Number(req.params.id);
+
   const currentLoggedUser = req.user;
   if (!currentLoggedUser) {
     throw Error("No user id in request object");
   }
-
-  const company = await prisma.company.deleteMany({
+  console.log("clientId", clientId, currentLoggedUser);
+  const pallet = await prisma.client.deleteMany({
     where: {
-      id_owner: currentLoggedUser,
+      id_client: clientId,
+      employee: {
+        id_user: currentLoggedUser,
+      },
     },
   });
-  res.status(201).json(company);
+  res.status(201).json(pallet);
 };
 
 export default {
@@ -134,5 +139,5 @@ export default {
   getSelectedClient,
   getMyClients,
   updateMyClient,
-  deleteMyCompany,
+  deleteClient,
 };

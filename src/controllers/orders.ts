@@ -39,16 +39,14 @@ const createOrder = async (req: Request, res: Response) => {
     throw Error("No user id in request object");
   }
 
-  const employee = await prisma.employee.findMany({
+  const employee = await prisma.employee.findUnique({
     where: {
       id_user: currentLoggedUser,
     },
   });
 
-  if (!employee[0]) {
+  if (!employee) {
     throw new CustomError("Employee not exists");
-  } else {
-    console.log("employee done");
   }
 
   body.batches.map(async (batch) => {
@@ -66,81 +64,68 @@ const createOrder = async (req: Request, res: Response) => {
           message: `Not enough product in stock ${currentBatch?.id_batch}`,
         },
       });
-      // throw new CustomError(
-      //   `Not enough product in stock ${currentBatch?.id_product}`
-      // );
     }
   });
 
   const order = await prisma.order.create({
+    select: {
+      id_order: true,
+      batch_order: {
+        select: {
+          id_batch: true,
+          quantity_in_order: true,
+        },
+      },
+    },
     data: {
       id_client: body.id_client,
       order_date: body.order_date,
       order_price: body.order_price,
       comments: body.comments,
-    },
-  });
-
-  if (!order) {
-    throw new CustomError("Problem with order");
-  }
-  const batchTransaction: any[] = [];
-
-  body.batches.forEach((batch) => {
-    const updateResult = prisma.batch.update({
-      data: {
-        quantity_in_stock: {
-          decrement: batch.quantity_in_order,
+      batch_order: {
+        createMany: {
+          data: body.batches,
         },
       },
-      where: {
-        id_batch: batch.id_batch,
+      order_status: {
+        create: {
+          id_status: 1,
+          id_employee: employee.id_employee,
+          timestamp: new Date(),
+        },
       },
-    });
-    batchTransaction.push(updateResult);
-    const createResult = prisma.batch_Order.create({
-      data: { ...batch, id_order: order.id_order },
-    });
-    batchTransaction.push(createResult);
-  });
-
-  const batch_order = await prisma.$transaction(batchTransaction);
-
-  if (batch_order.length <= 0) {
-    await prisma.order.delete({
-      where: {
-        id_order: order.id_order,
-      },
-    });
-    throw new CustomError("Problem with order batch");
-  }
-
-  const order_status = await prisma.order_Status.create({
-    data: {
-      id_order: order.id_order,
-      id_status: 1,
-      id_employee: employee?.[0].id_employee,
-      timestamp: new Date(),
     },
   });
 
-  if (!order_status) {
-    const batchOrdersId = batch_order.map((batch) => batch.id_batch_order);
-    await prisma.batch_Order.deleteMany({
-      where: {
-        id_batch_order: { in: batchOrdersId },
-      },
+  if (order) {
+    const batchTransaction: any[] = [];
+    order.batch_order.map((batch) => {
+      const updateResult = prisma.batch.update({
+        data: {
+          quantity_in_stock: {
+            decrement: batch.quantity_in_order,
+          },
+        },
+        where: {
+          id_batch: batch.id_batch,
+        },
+      });
+      batchTransaction.push(updateResult);
     });
-    await prisma.order.delete({
-      where: {
-        id_order: order.id_order,
-      },
-    });
-    throw new CustomError("Problem with order status");
+
+    const updateBatchQuantityInStockTransaction = await prisma.$transaction(
+      batchTransaction
+    );
+    if (updateBatchQuantityInStockTransaction.length <= 0) {
+      await prisma.order.delete({
+        where: {
+          id_order: order.id_order,
+        },
+      });
+    }
   }
 
   res.status(201).json(order);
-  // res.status(201).json("done");
 };
 
 const getMyOrders = async (req: Request, res: Response) => {
@@ -160,11 +145,17 @@ const getMyOrders = async (req: Request, res: Response) => {
       order_status: {
         select: {
           id_order_status: true,
-          status: true,
+          id_status: true,
           id_employee: true,
           timestamp: true,
           comments: true,
         },
+        orderBy: [
+          {
+            timestamp: "desc",
+          },
+        ],
+        take: 1,
       },
       client: true,
       batch_order: {
@@ -173,6 +164,8 @@ const getMyOrders = async (req: Request, res: Response) => {
           id_batch: true,
           batch: {
             select: {
+              selling_price: true,
+              purchase_price: true,
               batch_name: true,
               condition: true,
               product: {
@@ -212,10 +205,39 @@ const deleteOrder = async (req: Request, res: Response) => {
   }
 
   const order = await prisma.order.delete({
+    include: {
+      batch_order: {
+        include: {
+          batch: {
+            select: {
+              id_batch: true,
+            },
+          },
+        },
+      },
+    },
     where: {
       id_order: orderId,
     },
   });
+
+  if (order) {
+    order.batch_order.map(async (batch) => {
+      console.log("quantity_in_order", batch.quantity_in_order);
+      console.log("id_batch", batch.id_batch);
+      await prisma.batch.update({
+        data: {
+          quantity_in_stock: {
+            increment: batch.quantity_in_order,
+          },
+        },
+        where: {
+          id_batch: batch.id_batch,
+        },
+      });
+    });
+  }
+
   res.status(201).json(order);
 };
 

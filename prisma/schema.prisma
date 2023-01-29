@@ -51,11 +51,13 @@ model Employee {
   user         User           @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
   order_status Order_Status[]
   Pallet       Pallet[]
+  Supplier     Supplier[]
   Client       Client[]
 }
 
 model Supplier {
   id_supplier   Int      @id @default(autoincrement())
+  id_employee   Int
   first_name    String
   last_name     String
   supplier_name String?
@@ -68,6 +70,7 @@ model Supplier {
   postal_code   String
   city          String
   street        String
+  employee      Employee @relation(fields: [id_employee], references: [id_employee], onDelete: Cascade)
   pallet        Pallet[]
 }
 
@@ -165,7 +168,7 @@ model User {
   email     String    @unique
   password  String
   user_name String    @default("Użytkownik")
-  role      String
+  role      String?   @default("employee")
   avatar    String?
   active    Boolean   @default(true)
   client    Client[]
