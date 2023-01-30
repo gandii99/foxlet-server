@@ -1,0 +1,1 @@
+{"version":3,"file":"unautenticated-error.js","sourceRoot":"","sources":["../../../src/errors/unautenticated-error.ts"],"names":[],"mappings":";;;AAAA,iDAA6C;AAC7C,yDAAgD;AAEhD,MAAa,mBAAoB,SAAQ,0BAAW;IAClD,YAAY,OAAe;QACzB,KAAK,CAAC,OAAO,CAAC,CAAC;QACf,IAAI,CAAC,UAAU,GAAG,+BAAW,CAAC,YAAY,CAAC;IAC7C,CAAC;CACF;AALD,kDAKC"}
