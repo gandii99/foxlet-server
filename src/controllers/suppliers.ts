@@ -3,7 +3,20 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import { generateErrorMessage } from "zod-error";
 import { ValidationError } from "../errors";
-
+const x = {
+  NIP: "08989878",
+  REGON: "",
+  city: "Tarnów",
+  country: "Polska",
+  email: "",
+  first_name: "Testowa paleta",
+  last_name: "08989878",
+  phone: "",
+  postal_code: "33-170",
+  province: "Małopolska",
+  street: "Ogrodowa 6",
+  supplier_name: "",
+};
 const createSchema = z.object({
   first_name: z.string().min(1),
   last_name: z.string().min(1),
